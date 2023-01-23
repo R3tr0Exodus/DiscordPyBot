@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 honestlist = []
-prevTime = datetime.now()
+
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -19,8 +19,11 @@ async def on_ready():
 with open("honesty.txt", "r") as honest:
     honestlist = honest.read().split("\n")
 
+prevTime = datetime.now()
+
 @bot.event
 async def on_message(message):
+    global prevTime
     if message.author.id == 274540674655715330 and datetime.now() >= prevTime + timedelta(0,10):
         print("triggered")
         index = random.randint(0,len(honestlist))

@@ -3,7 +3,9 @@ import discord
 from discord.ext import commands
 import os
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
 honestlist = []
+prevTime = datetime.now()
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -19,11 +21,13 @@ with open("honesty.txt", "r") as honest:
 
 @bot.event
 async def on_message(message):
-    print(message.author.id)
-    if message.author.id == 274540674655715330:
+    if message.author.id == 274540674655715330 and datetime.now() >= prevTime + timedelta(0,10):
         print("triggered")
         index = random.randint(0,len(honestlist))
         await message.channel.send(honestlist[index])
+        prevTime = datetime.now()
+
+
 
 @bot.command()
 async def ping(ctx):

@@ -4,7 +4,7 @@ targetIDs = []
 
 
 def is_owner(interaction: discord.Interaction):
-    if interaction.user.guild_permissions.administrator and not any(interaction.user_id == targetIDs):
+    if interaction.user.guild_permissions.administrator:
         return True
     return False
 

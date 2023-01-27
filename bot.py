@@ -19,6 +19,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 
 bot = commands.Bot(command_prefix="==", intents=discord.Intents.all())
 
+
 #sync'er botten med oAUTH serveren som bot api'en bliver kørt igennem (Simple Auth? (se docs)
 @bot.event
 async def on_ready():
@@ -42,12 +43,15 @@ prevTime = datetime.now()
 async def on_message(message):
     await bot.process_commands(message)
     global prevTime
-    if (any(int(ID) == message.author.id for ID in Target.targetIDs)) and (
-            datetime.now() >= prevTime + timedelta(0, 10)):
-        print("triggered")
-        index = random.randint(0, len(honestlist) - 1)
-        await message.channel.send(honestlist[index])
-        prevTime = datetime.now()
+    if Target.key_exists(message.guild.id):
+        if message.guild.id not in cooldown:
+            cooldown[message.guild.id] = defaultCooldown
+        if (any(int(ID) == message.author.id for ID in Target.targetIDs[message.guild.id])) and (
+                datetime.now() >= prevTime + timedelta(0, 10)):
+            print("triggered")
+            index = random.randint(0, len(honestlist) - 1)
+            await message.channel.send(honestlist[index])
+            prevTime = datetime.now()
 
 
 #Set cooldown uden / kommandoer
@@ -113,8 +117,8 @@ async def set_cooldown(interaction: discord.Interaction, seconds: str) -> None:
     if Target.is_owner(interaction):
         global cooldown
         if seconds.isnumeric():
-            cooldown = int(seconds)
-            await interaction.response.send_message(f"Cooldown set to {cooldown} seconds!",
+            cooldown[interaction.guild_id] = int(seconds)
+            await interaction.response.send_message(f"Cooldown set to {seconds} seconds!",
                                                     ephemeral=True)
         else:
             await interaction.response.send_message(f"{seconds} is not a number, smh",
@@ -128,9 +132,8 @@ async def set_cooldown(interaction: discord.Interaction, seconds: str) -> None:
 @app_commands.describe(user_id="Input user ID (If multiple ID's separate by comma)")
 async def set_user_id(interaction: discord.Interaction, user_id: str) -> None:
     if Target.is_owner(interaction):
-        Target.targetIDs.clear()
         user_id_list = user_id.replace(" ", "").split(",")
-        Target.targetIDs.extend(user_id_list)
+        Target.targetIDs[interaction.guild_id] = user_id_list
         await interaction.response.send_message(f"Set {len(user_id_list)} target(s) :thumbsup:",
                                                 ephemeral=True)
     else:
@@ -143,7 +146,10 @@ async def set_user_id(interaction: discord.Interaction, user_id: str) -> None:
 async def add_user_id(interaction: discord.Interaction, user_id: str) -> None:
     if Target.is_owner(interaction):
         user_id_list = user_id.replace(" ", "").split(",")
-        Target.targetIDs.extend(user_id_list)
+        if Target.key_exists(interaction.guild_id):
+            Target.targetIDs[interaction.guild_id].extend(user_id_list)
+        else:
+            Target.targetIDs[interaction.guild_id] = user_id_list
         await interaction.response.send_message(
             f"Added {len(user_id_list)} target(s) :thumbsup:\nCurrent targets: {len(Target.targetIDs)}",
             ephemeral=True)
@@ -157,12 +163,12 @@ async def add_user_id(interaction: discord.Interaction, user_id: str) -> None:
 @app_commands.describe(user_id="Input user ID (If multiple ID's seperate by comma)")
 async def remove_user_id(interaction: discord.Interaction, user_id: str) -> None:
     if Target.is_owner(interaction):
-        if len(Target.targetIDs) >= 1:
+        if Target.key_exists(interaction.guild_id):
             user_id_list = user_id.replace(" ", "").split(",")
             deletions = 0
-            for i, element in enumerate(Target.targetIDs):
+            for i, element in enumerate(Target.targetIDs[interaction.guild_id]):
                 if any(int(element) == int(ID) for ID in user_id_list):
-                    del Target.targetIDs[i]
+                    del Target.targetIDs[interaction.guild_id][i]
                     deletions += 1
             if deletions >= 1:
                 await interaction.response.send_message(f"Removed {deletions} target(s)",
@@ -181,9 +187,9 @@ async def remove_user_id(interaction: discord.Interaction, user_id: str) -> None
 @bot.tree.command(name="list_targets", description="Lists all of the current targets")
 async def list_targets(interaction: discord.Interaction) -> None:
     if Target.is_owner(interaction):
-        if len(Target.targetIDs) >= 1:
+        if Target.key_exists(interaction.guild_id):
             await interaction.response.send_message(
-                f"{len(Target.targetIDs)} current targets:\n<@{'>,   <@'.join(Target.targetIDs)}>",
+                f"{len(Target.targetIDs[interaction.guild_id])} current targets:\n<@{'>,   <@'.join(Target.targetIDs[interaction.guild_id])}>",
                 ephemeral=True)
         else:
             await interaction.response.send_message("No current targets :pensive:",
@@ -205,8 +211,7 @@ async def honest(interaction: discord.Interaction) -> None:
 @app_commands.describe(user="Input user user")
 async def set_targets(interaction: discord.Interaction, user: discord.Member) -> None:
     if Target.is_owner(interaction):
-        Target.targetIDs.clear()
-        Target.targetIDs.extend([str(user.id)])
+        Target.targetIDs[interaction.guild_id] = [str(user.id)]
         await interaction.response.send_message(f"Set 1 target :thumbsup:",
                                                 ephemeral=True)
     else:
@@ -217,12 +222,15 @@ async def set_targets(interaction: discord.Interaction, user: discord.Member) ->
 @bot.tree.command(name="add_target", description="Adds users to the target list")
 @app_commands.describe(user="User")
 async def add_target(interaction: discord.Interaction, user: discord.Member) -> None:
-    if any(user.id == int(x) for x in Target.targetIDs):
-        await interaction.response.send_message("User is already a target!", ephemeral=True)
     if Target.is_owner(interaction):
-        Target.targetIDs.extend([str(user.id)])
+        if Target.key_exists(interaction.guild_id):
+            if any(user.id == int(x) for x in Target.targetIDs[interaction.guild_id]):
+                await interaction.response.send_message("User is already a target!", ephemeral=True)
+            Target.targetIDs[interaction.guild_id].extend([str(user.id)])
+        else:
+            Target.targetIDs[interaction.guild_id] = [str(user.id)]
         await interaction.response.send_message(
-            f"Added 1 target :thumbsup:\nCurrent targets: {len(Target.targetIDs)}",
+            f"Added 1 target :thumbsup:\nCurrent targets: {len(Target.targetIDs[interaction.guild_id])}",
             ephemeral=True)
     else:
         await interaction.response.send_message("Nuh uh! You no Admin!!", ephemeral=True)
@@ -233,11 +241,11 @@ async def add_target(interaction: discord.Interaction, user: discord.Member) -> 
 @app_commands.describe(user="Input user")
 async def remove_target(interaction: discord.Interaction, user: discord.Member) -> None:
     if Target.is_owner(interaction):
-        if len(Target.targetIDs) >= 1:
+        if Target.key_exists(interaction.guild_id):
             deletions = 0
-            for i, element in enumerate(Target.targetIDs):
+            for i, element in enumerate(Target.targetIDs[interaction.guild_id]):
                 if int(element) == user.id:
-                    del Target.targetIDs[i]
+                    del Target.targetIDs[interaction.guild_id][i]
                     deletions += 1
             if deletions >= 1:
                 await interaction.response.send_message(f"Removed {deletions} target(s)",

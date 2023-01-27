@@ -16,7 +16,3 @@ def load_targets(guild_id, suffix):
         Target.targetIDs = f.read().replace(" ", "").split("\n")
         f.close()
         
-# discord.Guild.id #???? maybe?
-# bot.get_guild(id) #????
-#ctx er discord's parameters for context information -m
-#Jeg begynder at lægge nogle kommentare ind i bot.py

@@ -22,7 +22,7 @@ bot = commands.Bot(command_prefix="==", intents=discord.Intents.all())
 #sync'er botten med oAUTH serveren som bot api'en bliver kørt igennem (Simple Auth? (se docs)
 @bot.event
 async def on_ready():
-    await bot.change_presence(activity=discord.Game("Honestly"))
+    await bot.change_presence(activity=discord.Game("With Honesty"))
     print("Bot has connected to Discord!")
     try:
         synced = await bot.tree.sync()
@@ -96,10 +96,14 @@ async def commands(interaction: discord.Interaction) -> None:
 #Kommando til at slette hele target listen
 @bot.tree.command(name="wipe", description="Wipes all targets that is currently on the Target List")
 async def wipe(interaction: discord.Interaction) -> None:
-    count = len(Target.targetIDs)
-    Target.targetIDs.clear()
-    await interaction.response.send_message(f"Wiped {count} targets :thumbsup:",
-        ephemeral=True)
+    if Target.key_exists(interaction.guild_id):
+        count = len(Target.targetIDs[interaction.guild_id])
+        Target.targetIDs[interaction.guild_id].clear()
+        await interaction.response.send_message(f"Wiped {count} targets :thumbsup:",
+                                                ephemeral=True)
+    else:
+        await interaction.response.send_message(f"No targets to wipe :pensive:",
+                                                ephemeral=True)
 
 
 #Sæt cooldown med / kommando

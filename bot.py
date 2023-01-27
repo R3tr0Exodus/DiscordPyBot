@@ -9,10 +9,12 @@ from datetime import datetime, timedelta
 import Target
 import Guild_Save
 
-#laver et array fra honesty.txt
+# Laver et array fra honesty.txt
 honestlist = []
-#default cooldown
-cooldown = 10
+
+# Default cooldown
+defaultCooldown = 10
+cooldown = {}
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -20,7 +22,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 bot = commands.Bot(command_prefix="==", intents=discord.Intents.all())
 
 
-#sync'er botten med oAUTH serveren som bot api'en bliver kørt igennem (Simple Auth? (se docs)
+# Synkronisere botten med oAUTH serveren som bot api'en bliver kørt igennem (Simple Auth? (se docs))
 @bot.event
 async def on_ready():
     await bot.change_presence(activity=discord.Game("With Honesty"))
@@ -31,14 +33,15 @@ async def on_ready():
     except Exception as e:
         print(e)
 
-#Læser of splitter arrayet op i forskellige strings
+
+# Læser of splitter arrayet op i forskellige strings
 with open("honesty.txt", "r") as honest:
     honestlist = honest.read().split("\n")
-#sætter prevTime som det tidspunkt en kommando bliver kørt
+# Sætter prevTime som det tidspunkt en kommando bliver kørt
 prevTime = datetime.now()
 
 
-#Søger om users har et ID der er registreret som Target
+# Søger om users har et ID der er registreret som Target
 @bot.event
 async def on_message(message):
     await bot.process_commands(message)
@@ -54,7 +57,7 @@ async def on_message(message):
             prevTime = datetime.now()
 
 
-#Set cooldown uden / kommandoer
+# Set cooldown uden / kommandoer
 @bot.command()
 async def SetCooldown(ctx, arg):
     global cooldown
@@ -65,31 +68,31 @@ async def SetCooldown(ctx, arg):
         await ctx.send(f"{arg} is not a number, smh")
 
 
-#Sæt targets uden / -- SKAL BRUGE USER-ID --
+# Sæt targets uden / -- SKAL BRUGE USER-ID --
 @bot.command()
 async def SetTargets(ctx, *args):
     await Target.SetTargets(ctx, *args)
 
 
-#Samme som SetTargets man kan have effekt på flere brugere samtidig
+# Samme som SetTargets man kan have effekt på flere brugere samtidig
 @bot.command()
 async def AddTargets(ctx, *args):
     await Target.AddTargets(ctx, *args)
 
 
-#Fjerner Targets -- SKAL BRUGE USER-ID --
+# Fjerner Targets -- SKAL BRUGE USER-ID --
 @bot.command()
 async def RemoveTargets(ctx, *args):
     await Target.RemoveTargets(ctx, *args)
 
 
-#Sender en liste med alle dem der er registreret som Targets
+# Sender en liste med alle dem der er registreret som Targets
 @bot.command()
 async def ListTargets(ctx):
     await Target.ListTargets(ctx)
 
 
-#Kommando liste men du bruger en / kommando til at se det
+# Kommando liste men du bruger en / kommando til at se det
 @bot.tree.command(name="commands", description="Lists all of honest-bots commands")
 async def commands(interaction: discord.Interaction) -> None:
     await interaction.response.send_message(
@@ -97,7 +100,7 @@ async def commands(interaction: discord.Interaction) -> None:
         ephemeral=True)
 
 
-#Kommando til at slette hele target listen
+# Kommando til at slette hele target listen
 @bot.tree.command(name="wipe", description="Wipes all targets that is currently on the Target List")
 async def wipe(interaction: discord.Interaction) -> None:
     if Target.key_exists(interaction.guild_id):
@@ -110,8 +113,8 @@ async def wipe(interaction: discord.Interaction) -> None:
                                                 ephemeral=True)
 
 
-#Sæt cooldown med / kommando
-@bot.tree.command(name="set_cooldown", description="Set the cooldown for when the bot")
+# Sæt cooldown med / kommando
+@bot.tree.command(name="cooldown", description="Set the cooldown for when the bot")
 @app_commands.describe(seconds="Input seconds here here")
 async def set_cooldown(interaction: discord.Interaction, seconds: str) -> None:
     if Target.is_owner(interaction):
@@ -127,8 +130,8 @@ async def set_cooldown(interaction: discord.Interaction, seconds: str) -> None:
         await interaction.response.send_message("Nuh uh! You no Admin!!", ephemeral=True)
 
 
-#Sætter et Target for botten -- SKAL BRUGE USER-ID --
-@bot.tree.command(name="set_user_id", description="Set a user for me to target (Removes all other targets)")
+# Sætter et Target for botten -- SKAL BRUGE USER-ID --
+@bot.tree.command(name="set_userid", description="Set a user for me to target (Removes all other targets)")
 @app_commands.describe(user_id="Input user ID (If multiple ID's separate by comma)")
 async def set_user_id(interaction: discord.Interaction, user_id: str) -> None:
     if Target.is_owner(interaction):
@@ -140,8 +143,8 @@ async def set_user_id(interaction: discord.Interaction, user_id: str) -> None:
         await interaction.response.send_message("Nuh uh! You no Admin!!", ephemeral=True)
 
 
-#Add User ID - Samme som Set_User_Id men du kan tilføje mere end en person
-@bot.tree.command(name="add_user_id", description="Add users for me to target")
+# Add User ID - Samme som Set_User_Id men du kan tilføje mere end en person
+@bot.tree.command(name="add_userid", description="Add users for me to target")
 @app_commands.describe(user_id="Input user ID (If multiple ID's seperate by comma)")
 async def add_user_id(interaction: discord.Interaction, user_id: str) -> None:
     if Target.is_owner(interaction):
@@ -158,9 +161,9 @@ async def add_user_id(interaction: discord.Interaction, user_id: str) -> None:
         await interaction.response.send_message("Nuh uh! You no Admin!!", ephemeral=True)
 
 
-#Fjern Targets (Bruger user id)
-@bot.tree.command(name="remove_user_id", description="Remove existing targets")
-@app_commands.describe(user_id="Input user ID (If multiple ID's seperate by comma)")
+# Fjern Targets (Bruger user id)
+@bot.tree.command(name="remove_userid", description="Remove existing targets")
+@app_commands.describe(user_id="Input user ID (If you're sending multiple ID's they should be separated by a comma)")
 async def remove_user_id(interaction: discord.Interaction, user_id: str) -> None:
     if Target.is_owner(interaction):
         if Target.key_exists(interaction.guild_id):
@@ -183,7 +186,7 @@ async def remove_user_id(interaction: discord.Interaction, user_id: str) -> None
         await interaction.response.send_message("Nuh uh! You no Admin!!", ephemeral=True)
 
 
-#Liste med targets
+# Liste med targets
 @bot.tree.command(name="list_targets", description="Lists all of the current targets")
 async def list_targets(interaction: discord.Interaction) -> None:
     if Target.is_owner(interaction):
@@ -198,7 +201,7 @@ async def list_targets(interaction: discord.Interaction) -> None:
         await interaction.response.send_message("nuh uh! You no Admin!!", ephemeral=True)
 
 
-#Sender en honest gif/fil
+# Sender en honest gif/fil
 @bot.tree.command(name="honest", description="Sends a random 'My honest opinion' gif")
 async def honest(interaction: discord.Interaction) -> None:
     global honestlist
@@ -206,7 +209,7 @@ async def honest(interaction: discord.Interaction) -> None:
     await interaction.response.send_message(honestlist[index])
 
 
-#Sætter et target med @'s
+# Sætter et target med @'s
 @bot.tree.command(name="set_target", description="Set a user for me to target (Removes all other targets)")
 @app_commands.describe(user="Input user user")
 async def set_targets(interaction: discord.Interaction, user: discord.Member) -> None:
@@ -218,7 +221,7 @@ async def set_targets(interaction: discord.Interaction, user: discord.Member) ->
         await interaction.response.send_message("Nuh uh! You no Admin!!", ephemeral=True)
 
 
-#Tilføjer flere brugere som targets
+# Tilføjer flere brugere som targets
 @bot.tree.command(name="add_target", description="Adds users to the target list")
 @app_commands.describe(user="User")
 async def add_target(interaction: discord.Interaction, user: discord.Member) -> None:
@@ -236,7 +239,7 @@ async def add_target(interaction: discord.Interaction, user: discord.Member) -> 
         await interaction.response.send_message("Nuh uh! You no Admin!!", ephemeral=True)
 
 
-#Fjerner targets med @'s
+# Fjerner targets med @'s
 @bot.tree.command(name="remove_target", description="Remove existing targets")
 @app_commands.describe(user="Input user")
 async def remove_target(interaction: discord.Interaction, user: discord.Member) -> None:
@@ -260,7 +263,7 @@ async def remove_target(interaction: discord.Interaction, user: discord.Member) 
         await interaction.response.send_message("Nuh uh! You no Admin!!", ephemeral=True)
 
 
-#Gemmer targets i en seperat fil på botten(?)
+# Gemmer targets i en seperat fil på botten(?)
 @bot.tree.command(name="save_targets", description="Save the current targets")
 @app_commands.describe(key="Input a key")
 async def save_targets(interaction: discord.Interaction, key: str) -> None:
@@ -272,7 +275,7 @@ async def save_targets(interaction: discord.Interaction, key: str) -> None:
         await interaction.response.send_message("Nuh uh! You no Admin!!", ephemeral=True)
 
 
-#Loader targets i en seperat fil på botten(?)
+# Loader targets i en separat fil på botten(?)
 @bot.tree.command(name="load_targets", description="Load a saved target loadout")
 @app_commands.describe(key="Input a key")
 async def load_targets(interaction: discord.Interaction, key: str) -> None:
@@ -282,5 +285,6 @@ async def load_targets(interaction: discord.Interaction, key: str) -> None:
 
     else:
         await interaction.response.send_message("Nuh uh! You no Admin!!", ephemeral=True)
+
 
 bot.run(TOKEN)

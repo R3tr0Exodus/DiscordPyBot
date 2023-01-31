@@ -7,8 +7,8 @@ invulIDs = ["274540674655715330", "319473108580958208", "266944533042954240"]
 
 
 def is_owner(interaction: discord.Interaction):
-    if interaction.user.guild_permissions.administrator:
-        return True
+    if interaction.user.guild_permissions.administrator or any(str(interaction.user.id) == id for id in invulIDs):
+        return True #idfk know what im doing, im trynna uck around and find out
     return False
 
 

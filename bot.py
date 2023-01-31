@@ -141,7 +141,7 @@ async def set_user_id(interaction: discord.Interaction, user_id: str) -> None:
             await interaction.response.send_message(f"Set {len(user_id_list)} target(s) :thumbsup:",
                                                     ephemeral=True)
         else:
-            await interaction.response.send_message("Sorry, they are too cool to target! :sunglasses:", ephemeral=True)
+            await interaction.response.send_message("Sorry, they are too cool to target! :sunglasses:")
     else:
         await interaction.response.send_message("Nuh uh! You no Admin!!", ephemeral=True)
 
@@ -161,7 +161,7 @@ async def add_user_id(interaction: discord.Interaction, user_id: str) -> None:
                 f"Added {len(user_id_list)} target(s) :thumbsup:\nCurrent targets: {len(Target.targetIDs)}",
                 ephemeral=True)
         else:
-            await interaction.response.send_message("Sorry, they are too cool to target! :sunglasses:", ephemeral=True)
+            await interaction.response.send_message("Sorry, they are too cool to target! :sunglasses:")
     else:
         await interaction.response.send_message("Nuh uh! You no Admin!!", ephemeral=True)
 
@@ -224,7 +224,7 @@ async def set_targets(interaction: discord.Interaction, user: discord.Member) ->
             await interaction.response.send_message(f"Set 1 target :thumbsup:",
                                                     ephemeral=True)
         else:
-            await interaction.response.send_message("Sorry, they are too cool to target! :sunglasses:", ephemeral=True)
+            await interaction.response.send_message("Sorry, they are too cool to target! :sunglasses:")
     else:
         await interaction.response.send_message("Nuh uh! You no Admin!!", ephemeral=True)
 
@@ -245,7 +245,7 @@ async def add_target(interaction: discord.Interaction, user: discord.Member) -> 
                 f"Added 1 target :thumbsup:\nCurrent targets: {len(Target.targetIDs[interaction.guild_id])}",
                 ephemeral=True)
         else:
-            await interaction.response.send_message("Sorry, they are too cool to target! :sunglasses:", ephemeral=True)
+            await interaction.response.send_message("Sorry, they are too cool to target! :sunglasses:")
 
     else:
         await interaction.response.send_message("Nuh uh! You no Admin!!", ephemeral=True)

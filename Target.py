@@ -2,6 +2,9 @@ import discord
 
 targetIDs = {}
 
+#           Thorbjørn             Magnus                Atle
+invulIDs = ["274540674655715330", "319473108580958208", "266944533042954240"]
+
 
 def is_owner(interaction: discord.Interaction):
     if interaction.user.guild_permissions.administrator:
@@ -11,7 +14,6 @@ def is_owner(interaction: discord.Interaction):
 
 def key_exists(key) -> bool:
     return key in targetIDs and len(targetIDs[key]) >= 1
-
 
 
 async def SetTargets(ctx, *args):

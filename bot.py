@@ -135,10 +135,13 @@ async def set_cooldown(interaction: discord.Interaction, seconds: str) -> None:
 @app_commands.describe(user_id="Input user ID (If multiple ID's separate by comma)")
 async def set_user_id(interaction: discord.Interaction, user_id: str) -> None:
     if Target.is_owner(interaction):
-        user_id_list = user_id.replace(" ", "").split(",")
-        Target.targetIDs[interaction.guild_id] = user_id_list
-        await interaction.response.send_message(f"Set {len(user_id_list)} target(s) :thumbsup:",
-                                                ephemeral=True)
+        if user_id not in Target.invulIDs:
+            user_id_list = user_id.replace(" ", "").split(",")
+            Target.targetIDs[interaction.guild_id] = user_id_list
+            await interaction.response.send_message(f"Set {len(user_id_list)} target(s) :thumbsup:",
+                                                    ephemeral=True)
+        else:
+            await interaction.response.send_message("Sorry, they are too cool to target! :sunglasses:", ephemeral=True)
     else:
         await interaction.response.send_message("Nuh uh! You no Admin!!", ephemeral=True)
 
@@ -148,15 +151,17 @@ async def set_user_id(interaction: discord.Interaction, user_id: str) -> None:
 @app_commands.describe(user_id="Input user ID (If multiple ID's seperate by comma)")
 async def add_user_id(interaction: discord.Interaction, user_id: str) -> None:
     if Target.is_owner(interaction):
-        user_id_list = user_id.replace(" ", "").split(",")
-        if Target.key_exists(interaction.guild_id):
-            Target.targetIDs[interaction.guild_id].extend(user_id_list)
+        if user_id not in Target.invulIDs:
+            user_id_list = user_id.replace(" ", "").split(",")
+            if Target.key_exists(interaction.guild_id):
+                Target.targetIDs[interaction.guild_id].extend(user_id_list)
+            else:
+                Target.targetIDs[interaction.guild_id] = user_id_list
+            await interaction.response.send_message(
+                f"Added {len(user_id_list)} target(s) :thumbsup:\nCurrent targets: {len(Target.targetIDs)}",
+                ephemeral=True)
         else:
-            Target.targetIDs[interaction.guild_id] = user_id_list
-        await interaction.response.send_message(
-            f"Added {len(user_id_list)} target(s) :thumbsup:\nCurrent targets: {len(Target.targetIDs)}",
-            ephemeral=True)
-
+            await interaction.response.send_message("Sorry, they are too cool to target! :sunglasses:", ephemeral=True)
     else:
         await interaction.response.send_message("Nuh uh! You no Admin!!", ephemeral=True)
 
@@ -214,9 +219,12 @@ async def honest(interaction: discord.Interaction) -> None:
 @app_commands.describe(user="Input user user")
 async def set_targets(interaction: discord.Interaction, user: discord.Member) -> None:
     if Target.is_owner(interaction):
-        Target.targetIDs[interaction.guild_id] = [str(user.id)]
-        await interaction.response.send_message(f"Set 1 target :thumbsup:",
-                                                ephemeral=True)
+        if str(user.id) not in Target.invulIDs:
+            Target.targetIDs[interaction.guild_id] = [str(user.id)]
+            await interaction.response.send_message(f"Set 1 target :thumbsup:",
+                                                    ephemeral=True)
+        else:
+            await interaction.response.send_message("Sorry, they are too cool to target! :sunglasses:", ephemeral=True)
     else:
         await interaction.response.send_message("Nuh uh! You no Admin!!", ephemeral=True)
 
@@ -226,15 +234,19 @@ async def set_targets(interaction: discord.Interaction, user: discord.Member) ->
 @app_commands.describe(user="User")
 async def add_target(interaction: discord.Interaction, user: discord.Member) -> None:
     if Target.is_owner(interaction):
-        if Target.key_exists(interaction.guild_id):
-            if any(user.id == int(x) for x in Target.targetIDs[interaction.guild_id]):
-                await interaction.response.send_message("User is already a target!", ephemeral=True)
-            Target.targetIDs[interaction.guild_id].extend([str(user.id)])
+        if str(user.id) not in Target.invulIDs:
+            if Target.key_exists(interaction.guild_id):
+                if any(user.id == int(x) for x in Target.targetIDs[interaction.guild_id]):
+                    await interaction.response.send_message("User is already a target!", ephemeral=True)
+                Target.targetIDs[interaction.guild_id].extend([str(user.id)])
+            else:
+                Target.targetIDs[interaction.guild_id] = [str(user.id)]
+            await interaction.response.send_message(
+                f"Added 1 target :thumbsup:\nCurrent targets: {len(Target.targetIDs[interaction.guild_id])}",
+                ephemeral=True)
         else:
-            Target.targetIDs[interaction.guild_id] = [str(user.id)]
-        await interaction.response.send_message(
-            f"Added 1 target :thumbsup:\nCurrent targets: {len(Target.targetIDs[interaction.guild_id])}",
-            ephemeral=True)
+            await interaction.response.send_message("Sorry, they are too cool to target! :sunglasses:", ephemeral=True)
+
     else:
         await interaction.response.send_message("Nuh uh! You no Admin!!", ephemeral=True)
 

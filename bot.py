@@ -50,7 +50,7 @@ async def on_message(message):
         if message.guild.id not in cooldown:
             cooldown[message.guild.id] = defaultCooldown
         if (any(int(ID) == message.author.id for ID in Target.targetIDs[message.guild.id])) and (
-                datetime.now() >= prevTime + timedelta(0, 10)):
+                datetime.now() >= prevTime + timedelta(seconds=cooldown[message.guild.id])):
             print("triggered")
             index = random.randint(0, len(honestlist) - 1)
             await message.channel.send(honestlist[index])

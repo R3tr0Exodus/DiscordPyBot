@@ -210,8 +210,11 @@ async def list_targets(interaction: discord.Interaction) -> None:
 @bot.tree.command(name="honest", description="Sends a random 'My honest opinion' gif")
 async def honest(interaction: discord.Interaction) -> None:
     global honestlist
-    index = random.randint(0, len(honestlist) - 1)
-    await interaction.response.send_message(honestlist[index])
+    if interaction.user.id != 417249893938233345:
+        index = random.randint(0, len(honestlist) - 1)
+        await interaction.response.send_message(honestlist[index])
+    else:
+        await interaction.response.send_message("Shut the fuck up", ephemeral=True)
 
 
 # Sætter et target med @'s
